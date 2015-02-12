@@ -4,17 +4,18 @@
 // John Timms
 // accumulator_memory.v
 //
-// load and full wires are only for the testbench's convenience
+// load, full, index, and state wires are only for the testbench's convenience
 //
  
 `timescale 1 ns / 100 ps
  
-module accumulator_memory (clk, reset, op, data, load, full);
+module accumulator_memory (clk, reset, op, data, load, full, index, state);
  
 input clk, reset, load;
 inout [1:0] op;
 inout [31:0] data;
-output full;
+output [9:0] index;
+output full, state;
  
 reg [1023:0] M [0:31];
 reg [9:0] I;
@@ -38,6 +39,7 @@ localparam
 assign op = (state == READ || state == WRITE) ? op_internal : 2'bz;
 assign data = (state == READ || state == DONE) ? data_internal : 32'bz;
 assign full = ( I == 10'b1111111111 );
+assign index = I;
 	
 always @(posedge clk, posedge reset) 
 begin
