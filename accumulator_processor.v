@@ -6,25 +6,26 @@
  
 `timescale 1 ns / 100 ps
  
-module accumulator_processor (clk, reset, op, data, req, grant);
+module accumulator_processor (clk, reset, op, signal, read, write, req, grant, state);
  
-input clk, reset, grant;
-inout [1:0] op;
-inout [31:0] data;
+input clk, reset, signal, grant;
+input [1:0] op;
+input [31:0] read;
+output [31:0] write;
 output req;
+output [6:0] state;
 
-reg req_internal; 
-reg [4:0] state;
+reg req; 
+reg [6:0] state;
 reg [1:0] op_internal;
 reg [31:0] A;
 reg [31:0] B;
-reg [31:0] result;
+reg [31:0] write_internal;
  
 localparam
 	NOP	  = 2'b00, // No operation
 	FETCH = 2'b01, // Fetch an operand from the memory
-	SEND  = 2'b10, // Send a result to the memory
-	END	  = 2'b11; // Memory has finished fetch/send
+	SEND  = 2'b10; // Send a result to the memory
  
 localparam 
 	REQ1 = 7'b0000001, // Request 1 state - requests the bus to receive A
@@ -35,9 +36,8 @@ localparam
 	REQ3 = 7'b0100000, // Request 3 state - requests the bus to send the result
 	RSLT = 7'b1000000; // Result state    - sends the result over the bus
 	
-assign req = req_internal;
 assign op = (op_internal == FETCH || op_internal == SEND) ? op_internal : 2'bz;
-assign data = (state == RSLT) ? result : 32'bz;
+assign write = (state == RSLT) ? write_internal : 32'bz;
 	
 always @(posedge clk, posedge reset) 
 begin
@@ -50,7 +50,7 @@ begin
 		
 			REQ1:
 			begin
-				req_internal <= 1'b1;
+				req <= 1'b1;
 				
 				if (grant) begin
 					op_internal <= FETCH;
@@ -61,17 +61,17 @@ begin
 			RECA:
 			begin
 				op_internal <= NOP;
-				A <= data;
+				A <= read;
 				
-				if (op == END) begin
-					req_internal <= 1'b0;
+				if (signal) begin
+					req <= 1'b0;
 					state <= REQ2;
 				end
 			end
 			
 			REQ2:
 			begin
-				req_internal <= 1'b1;
+				req <= 1'b1;
 				
 				if (grant) begin
 					op_internal <= FETCH;
@@ -82,23 +82,23 @@ begin
 			RECB:
 			begin
 				op_internal <= NOP;
-				B <= data;
+				B <= read;
 				
-				if (op == END) begin
-					req_internal <= 1'b0;
+				if (signal) begin
+					req <= 1'b0;
 					state <= ADD;
 				end
 			end
 			
 			ADD:
 			begin
-				result <= A + B;
+				write_internal <= A + B;
 				state <= REQ3;
 			end
 			
 			REQ3:
 			begin
-				req_internal <= 1'b1;
+				req <= 1'b1;
 				
 				if (grant) begin
 					op_internal <= SEND;
@@ -110,8 +110,8 @@ begin
 			begin
 				op_internal <= NOP;
 				
-				if (op == END) begin
-					req_internal <= 1'b0;
+				if (signal) begin
+					req <= 1'b0;
 					state <= REQ1;
 				end
 			end

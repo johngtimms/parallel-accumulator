@@ -11,27 +11,38 @@
 
 module accumulator_top (bus_clk, proc_clk, reset, load, result);
 
+// Signals for this module
 input bus_clk, proc_clk, reset;
 input [31:0] load;
 output [31:0] result;
 
+// Signals for the arbiter
 wire [3:0] req;
 wire [3:0] grant;
 
+// Signals for the memory
 wire [1:0] op;
-wire [31:0] data;
+wire signal;
+wire [31:0] read;
+wire [31:0] write;
 wire load_signal, full;
+wire [9:0] index;
+wire [31:0] preview;
+wire [4:0] state;
 
 assign load_signal = (load != 0) ? 1'b1 : 1'b0;
-assign data = (load != 0) ? load : 32'bz;
-assign result = (full) ? data : 32'b0;
+assign read = (load != 0) ? load : 32'bz;
+assign result = (full) ? read : 32'b0;
 
+// RoundRobinArbiter 			(clk, req, grant)
 RoundRobinArbiter 		arbiter	(bus_clk, req, grant);
-accumulator_memory		memory	(proc_clk, reset, op, data, load_signal, full);
-accumulator_processor 	proc0 	(proc_clk, reset, op, data, req[0], grant[0]);
-accumulator_processor 	proc1 	(proc_clk, reset, op, data, req[1], grant[1]);
-accumulator_processor	proc2 	(proc_clk, reset, op, data, req[2], grant[2]);
-accumulator_processor 	proc3 	(proc_clk, reset, op, data, req[3], grant[3]);
+// accumulator_memory 			(clk, reset, op, signal, read, write, load, full, index, preview, state)
+accumulator_memory		memory	(proc_clk, reset, op, signal, read, write, load, full, index, preview, state);
+// accumulator_processor 		(clk, reset, op, signal, read, write, req, grant)
+accumulator_processor 	proc0 	(proc_clk, reset, op, signal, read, write, req[0], grant[0]);
+accumulator_processor 	proc1 	(proc_clk, reset, op, signal, read, write, req[1], grant[1]);
+accumulator_processor	proc2 	(proc_clk, reset, op, signal, read, write, req[2], grant[2]);
+accumulator_processor 	proc3 	(proc_clk, reset, op, signal, read, write, req[3], grant[3]);
 
 endmodule
  
