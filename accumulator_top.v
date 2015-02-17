@@ -31,13 +31,14 @@ wire [31:0] preview;
 wire [4:0] state;
 
 assign load_signal = (load != 0) ? 1'b1 : 1'b0;
+assign write = (load != 0) ? load : 'bz;
 assign read = (load != 0) ? load : 32'bz;
 assign result = (full) ? read : 32'b0;
 
 // RoundRobinArbiter 			(clk, req, grant)
 RoundRobinArbiter 		arbiter	(bus_clk, req, grant);
 // accumulator_memory 			(clk, reset, op, signal, read, write, load, full, index, preview, state)
-accumulator_memory		memory	(proc_clk, reset, op, signal, read, write, load, full, index, preview, state);
+accumulator_memory		memory	(proc_clk, reset, op, signal, read, write, load_signal, full, index, preview, state);
 // accumulator_processor 		(clk, reset, op, signal, read, write, req, grant)
 accumulator_processor 	proc0 	(proc_clk, reset, op, signal, read, write, req[0], grant[0]);
 accumulator_processor 	proc1 	(proc_clk, reset, op, signal, read, write, req[1], grant[1]);

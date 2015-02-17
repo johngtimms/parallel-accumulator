@@ -57,6 +57,8 @@ accumulator_top UUT (clk_tb, clk_tb, reset_tb, load, result);
 initial
 begin
 	results = $fopen("accumulator.txt", "w");
+		
+	wait (!reset_tb);
 	
 	while (clk_count < 1023) begin
 		@(posedge clk_tb)
@@ -64,7 +66,10 @@ begin
 		$fdisplay (results, "%h", load);
 	end
 	
-	wait(clk_count == 10000);
+	@(posedge clk_tb)
+	load <= 'bx;
+	
+	wait(clk_count == 5000);
 	
 	$fclose (results);
 	

@@ -15,7 +15,7 @@ output [31:0] write;
 output req;
 output [6:0] state;
 
-reg req; 
+reg req = 0; 
 reg [6:0] state;
 reg [1:0] op_internal;
 reg [31:0] A;
