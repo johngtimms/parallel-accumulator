@@ -38,6 +38,22 @@ localparam
 	
 assign op = (op_internal == FETCH || op_internal == SEND) ? op_internal : 2'bz;
 assign write = (state == RSLT) ? write_internal : 32'bz;
+
+reg [4*8:1] state_string;
+
+always @(*)
+begin
+	case (state)
+		7'b0000001: state_string = "REQ1";
+		7'b0000010: state_string = "RECA";
+		7'b0000100: state_string = "REQ2";
+		7'b0001000: state_string = "RECB";
+		7'b0010000: state_string = "ADD ";
+		7'b0100000: state_string = "REQ3";
+		7'b1000000: state_string = "RSLT";
+		default: state_string = "UNKN";
+	endcase
+end
 	
 always @(posedge clk, posedge reset) 
 begin
@@ -53,17 +69,17 @@ begin
 				req <= 1'b1;
 				
 				if (grant) begin
-					op_internal <= FETCH;
 					state <= RECA;
 				end
 			end
 			
 			RECA:
 			begin
-				op_internal <= NOP;
+				op_internal <= FETCH;
 				A <= read;
 				
 				if (signal) begin
+					op_internal <= NOP;
 					req <= 1'b0;
 					state <= REQ2;
 				end
@@ -74,17 +90,17 @@ begin
 				req <= 1'b1;
 				
 				if (grant) begin
-					op_internal <= FETCH;
 					state <= RECB;
 				end
 			end
 			
 			RECB:
 			begin
-				op_internal <= NOP;
+				op_internal <= FETCH;
 				B <= read;
 				
 				if (signal) begin
+					op_internal <= NOP;
 					req <= 1'b0;
 					state <= ADD;
 				end
@@ -101,16 +117,16 @@ begin
 				req <= 1'b1;
 				
 				if (grant) begin
-					op_internal <= SEND;
 					state <= RSLT;
 				end
 			end
 			
 			RSLT:
 			begin
-				op_internal <= NOP;
+				op_internal <= SEND;	
 				
 				if (signal) begin
+					op_internal <= NOP;
 					req <= 1'b0;
 					state <= REQ1;
 				end

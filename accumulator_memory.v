@@ -51,6 +51,20 @@ assign preview = M[I];
 assign full = ( I == 10'b1111111111 );
 assign index = I;
 
+reg [5*8:1] state_string;
+
+always @(*)
+begin
+	case (state)
+		5'b00001: state_string = "INI  ";
+		5'b00010: state_string = "READ ";
+		5'b00100: state_string = "WRITE";
+		5'b01000: state_string = "READY";
+		5'b10000: state_string = "DONE ";
+		default: state_string = "UNKN ";
+	endcase
+end
+
 always @(posedge clk, posedge reset) 
 begin
 	if (reset) begin
@@ -69,11 +83,11 @@ begin
 					I <= I + 1;
 				end
 				
-				if (op == FETCH) begin
+				if (!load && op == FETCH) begin
 					state <= READ;
 				end
 				
-				if (op == SEND) begin
+				if (!load && op == SEND) begin
 					state <= WRITE;
 				end
 			end
@@ -81,7 +95,7 @@ begin
 			// Read state
 			// Finds an M[I] that is non-zero by traveling up the index
 			// Puts M[I] on the bus, sets M[I] to zero, increments I
-			// Always increments I because reads are 2x common as writes, so it should be faster
+			// Always increments I (if I is not terminal) because reads are 2x common as writes, so it should be faster
 			// If I is terminal (i.e. equals 1023) and M[1023] has already been read then it just puts zero on the bus
 			READ :
 			begin 
@@ -95,7 +109,8 @@ begin
 						read <= M[I];
 						signal <= 1;
 						M[I] <= 0;
-						I <= I + 1;
+						if (I != 1023)
+							I <= I + 1;
 						state <= READY;
 					end
 					else begin
@@ -110,7 +125,8 @@ begin
 			// If I is terminal (i.e. equals 1023) then go to the done state
 			WRITE :
 			begin
-				if (I == 1023) begin
+				if (I == 1023 && M[I] == 0) begin
+					M[I] <= write;
 					signal <= 1;
 					state <= DONE;
 				end
@@ -126,19 +142,20 @@ begin
 				end
 			end
 				
-			// Ready state	
+			// Ready state
+			// Sets signal low (signal is only ever high for one clock)
+			// Erases the current read value (if any) to prevent confusion
+			// Enforces a period of at least one clock before accepting another operation.
 			READY :
 			begin
 				signal <= 0;
-				
-				// Erases the current read value to prevent confusion
 				read <= 'bx;
 				
-				if (op == FETCH) begin
+				if (signal == 0 && op == FETCH) begin
 					state <= READ;
 				end
 				
-				if (op == SEND) begin
+				if (signal == 0 && op == SEND) begin
 					state <= WRITE;
 				end
 			end
@@ -148,6 +165,7 @@ begin
 			// This state can only be reached when a processor writes and I = 1023.
 			DONE :
 			begin
+				read <= M[I];
 				signal <= 0;
 			end   
 		endcase

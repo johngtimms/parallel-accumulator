@@ -45,8 +45,10 @@ end
 // 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-reg [31:0] load;
+reg [31:0] load = 32'b0;
 wire [31:0] result;
+
+integer load_count = 0;
 
 accumulator_top UUT (clk_tb, clk_tb, reset_tb, load, result);
 
@@ -55,24 +57,21 @@ accumulator_top UUT (clk_tb, clk_tb, reset_tb, load, result);
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 initial
-begin
-	results = $fopen("accumulator.txt", "w");
-		
+begin		
 	wait (!reset_tb);
 	
-	while (clk_count < 1023) begin
+	while (load_count < 1023) begin
 		@(posedge clk_tb)
 		load <= {$random} % 65536;
-		$fdisplay (results, "%h", load);
+		load_count <= load_count + 1;
 	end
 	
 	@(posedge clk_tb)
-	load <= 'bx;
+	load <= 32'b0;
 	
-	wait(clk_count == 5000);
+	wait(result !== 'bx);
 	
-	$fclose (results);
-	
+	@(posedge clk_tb)
 	$stop;
 end
 

@@ -23,10 +23,12 @@ module RoundRobinArbiter (clk, req, grant);
   
   always @(posedge clk)
   begin
-	mask <= {grant[0],
-			 grant[0] || grant[3],
-			 grant[0] || grant[2] || grant[3],
-			 grant[1] || grant[2] || grant[3]};
+	if ((req != 0) && ((req & grant) == 0)) begin
+		mask <= {grant[0],
+				 grant[0] || grant[3],
+				 grant[0] || grant[2] || grant[3],
+				 grant[1] || grant[2] || grant[3]};
+	end
   end
 
 endmodule 
