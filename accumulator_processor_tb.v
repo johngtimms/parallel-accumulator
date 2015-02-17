@@ -48,16 +48,29 @@ end
 localparam
 	NOP	  = 2'b00, // No operation
 	FETCH = 2'b01, // Fetch an operand from the memory
-	SEND  = 2'b10, // Send a result to the memory
+	SEND  = 2'b10; // Send a result to the memory
+	
+localparam 
+	REQ1 = 7'b0000001, // Request 1 state - requests the bus to receive A
+	RECA = 7'b0000010, // Receive A state - receives A from the bus
+	REQ2 = 7'b0000100, // Request 2 state - requests the bus to receive B
+	RECB = 7'b0001000, // Receive B state - receives B from the bus
+	ADD  = 7'b0010000, // Add state       - adds A and B
+	REQ3 = 7'b0100000, // Request 3 state - requests the bus to send the result
+	RSLT = 7'b1000000; // Result state    - sends the result over the bus
 
 wire [1:0] op_tb;
-wire signal_tb;
+reg signal_tb = 0;
 reg [31:0] read_tb;
 wire [31:0] write_tb;
 wire req_tb;
-reg grant_tb;
+reg grant_tb = 0;
 wire [6:0] state_tb;
 reg [4*8:1] state_string;
+
+integer A;
+integer B;
+reg [6:0] state_internal = REQ1;
 
 always @(*)
 begin
@@ -74,7 +87,7 @@ begin
 end
 
 // accumulator_processor (clk, reset, op, signal, read, write, req, grant)
-accumulator_processor UUT (clk_tb, reset_tb, op_tb, signal_tb, read_tb, write_tb, req_tb, grant_tb, state_tb)
+accumulator_processor UUT (clk_tb, reset_tb, op_tb, signal_tb, read_tb, write_tb, req_tb, grant_tb, state_tb);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Run the test
@@ -82,18 +95,73 @@ accumulator_processor UUT (clk_tb, reset_tb, op_tb, signal_tb, read_tb, write_tb
 
 initial
 begin
-	results = $fopen("processor.txt", "w");
+	A = {$random} % 65536;
+	B = {$random} % 65536;
+end
+
+always @(posedge clk_tb)
+begin
+	case (state_internal)
 	
-	wait (!reset_tb);
+		REQ1:
+		begin
+			if (req_tb) begin
+				grant_tb <= 1;
+				state_internal <= RECA;
+			end
+		end
+		
+		RECA:
+		begin
+			if (op_tb == FETCH) begin
+				read_tb <= A;
+				signal_tb <= 1;
+				state_internal <= REQ2;
+			end
+		end
+		
+		REQ2:
+		begin
+			grant_tb <= 0;
+			signal_tb <= 0;
+			if (req_tb) begin
+				grant_tb <= 1;
+				state_internal <= RECB;
+			end
+		end
+		
+		RECB:
+		begin
+			if (op_tb == FETCH) begin
+				read_tb <= B;
+				signal_tb <= 1;
+				state_internal <= ADD;
+			end
+		end
+		
+		ADD:
+		begin
+			grant_tb <= 0;
+			signal_tb <= 0;
+			state_internal <= REQ3;
+		end
+		
+		REQ3:
+		begin
+			if (req_tb) begin
+				grant_tb <= 1;
+				state_internal <= RSLT;
+			end
+		end
+		
+		RSLT:
+		begin
+			if (clk_count == 50) begin
+				$stop;
+			end
+		end
 	
-	while (clk_count < 100) begin
-		@(posedge clk_tb)
-		$fdisplay (results, "Clock");
-	end
-	
-	$fclose (results);
-	
-	$stop;
+	endcase
 end
 
 endmodule
