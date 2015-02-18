@@ -33,7 +33,7 @@ wire [4:0] state;
 assign load_signal = (load != 0) ? 1'b1 : 1'b0;
 assign write = (load != 0) ? load : 'bz;
 assign read = (load != 0) ? load : 32'bz;
-assign result = (state == 5'b10000) ? read : 'bx;
+assign result = (state == 5'b10000 && read !== 'bx) ? read : 'bx;
 
 //assign req = {1'b0,1'b0,1'b0,1'bz};
 

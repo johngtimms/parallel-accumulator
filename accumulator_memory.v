@@ -128,6 +128,7 @@ begin
 				if (I == 1023 && M[I] == 0) begin
 					M[I] <= write;
 					signal <= 1;
+					I <= I - 1;
 					state <= DONE;
 				end
 				else begin
@@ -165,8 +166,30 @@ begin
 			// This state can only be reached when a processor writes and I = 1023.
 			DONE :
 			begin
-				read <= M[I];
 				signal <= 0;
+				read <= 'bx;
+				
+				if (signal == 0 && op == SEND && I == 1022) begin
+					M[I] <= write;
+					signal <= 1;
+					I <= I - 1;
+				end
+				
+				if (signal == 0 && op == SEND && I == 1021) begin
+					M[I] <= write;
+					signal <= 1;
+					I <= I - 1;
+				end
+				
+				if (signal == 0 && op == SEND && I == 1020) begin
+					M[I] <= write;
+					signal <= 1;
+					I <= I - 1;
+				end
+				
+				if (signal == 0 && I == 1019) begin
+					read <= (M[1023] + M[1022] + M[1021] + M[1020]);
+				end
 			end   
 		endcase
 	end 

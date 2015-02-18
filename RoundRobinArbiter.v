@@ -10,6 +10,7 @@ module RoundRobinArbiter (clk, req, grant);
   input [3:0] req;
   output [3:0] grant;
   
+  reg [3:0] grant = 4'b0000;
   reg [3:0] mask = 4'b0000;
   wire [3:0] unmasked_req, unmasked_grant, masked_req, masked_grant;
   
@@ -19,16 +20,20 @@ module RoundRobinArbiter (clk, req, grant);
   FixedPriorityArbiter unmasked_arbiter (unmasked_req, unmasked_grant);
   FixedPriorityArbiter masked_arbiter (masked_req, masked_grant);
   
-  assign grant = ~|masked_req ? unmasked_grant : masked_grant;
+  always @(negedge req[0], negedge req[1], negedge req[2], negedge req[3])
+  begin
+	grant <= ~|masked_req ? unmasked_grant : masked_grant;
+  end
   
   always @(posedge clk)
   begin
-	if ((req != 0) && ((req & grant) == 0)) begin
-		mask <= {grant[0],
-				 grant[0] || grant[3],
-				 grant[0] || grant[2] || grant[3],
-				 grant[1] || grant[2] || grant[3]};
+	if (grant == 0 && req != 0) begin
+		grant <= ~|masked_req ? unmasked_grant : masked_grant;
 	end
+	mask <= {grant[0],
+			 grant[0] || grant[3],
+			 grant[0] || grant[2] || grant[3],
+			 grant[1] || grant[2] || grant[3]};
   end
 
 endmodule 

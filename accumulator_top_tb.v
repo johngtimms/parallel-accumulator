@@ -47,6 +47,7 @@ end
 
 reg [31:0] load = 32'b0;
 wire [31:0] result;
+reg [31:0] debug = 32'b0;
 
 integer load_count = 0;
 
@@ -63,10 +64,12 @@ begin
 	while (load_count < 1023) begin
 		@(posedge clk_tb)
 		load <= {$random} % 65536;
+		debug <= debug + load;
 		load_count <= load_count + 1;
 	end
 	
 	@(posedge clk_tb)
+	debug <= debug + load;
 	load <= 32'b0;
 	
 	wait(result !== 'bx);

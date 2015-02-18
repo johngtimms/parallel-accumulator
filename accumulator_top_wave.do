@@ -24,18 +24,30 @@ add wave -group "memory" -noupdate -format literal -radix ascii sim:/accumulator
 
 add wave -group "proc0" -noupdate -format logic -radix binary sim:/accumulator_top_tb/UUT/proc0/req
 add wave -group "proc0" -noupdate -format logic -radix binary sim:/accumulator_top_tb/UUT/proc0/grant
+add wave -group "proc0" -noupdate -format literal -radix hexadecimal sim:/accumulator_top_tb/UUT/proc0/A
+add wave -group "proc0" -noupdate -format literal -radix hexadecimal sim:/accumulator_top_tb/UUT/proc0/B
+add wave -group "proc0" -noupdate -format literal -radix hexadecimal sim:/accumulator_top_tb/UUT/proc0/result
 add wave -group "proc0" -noupdate -format literal -radix ascii sim:/accumulator_top_tb/UUT/proc0/state_string
 
 add wave -group "proc1" -noupdate -format logic -radix binary sim:/accumulator_top_tb/UUT/proc1/req
 add wave -group "proc1" -noupdate -format logic -radix binary sim:/accumulator_top_tb/UUT/proc1/grant
+add wave -group "proc1" -noupdate -format literal -radix hexadecimal sim:/accumulator_top_tb/UUT/proc1/A
+add wave -group "proc1" -noupdate -format literal -radix hexadecimal sim:/accumulator_top_tb/UUT/proc1/B
+add wave -group "proc1" -noupdate -format literal -radix hexadecimal sim:/accumulator_top_tb/UUT/proc1/result
 add wave -group "proc1" -noupdate -format literal -radix ascii sim:/accumulator_top_tb/UUT/proc1/state_string
 
 add wave -group "proc2" -noupdate -format logic -radix binary sim:/accumulator_top_tb/UUT/proc2/req
 add wave -group "proc2" -noupdate -format logic -radix binary sim:/accumulator_top_tb/UUT/proc2/grant
+add wave -group "proc2" -noupdate -format literal -radix hexadecimal sim:/accumulator_top_tb/UUT/proc2/A
+add wave -group "proc2" -noupdate -format literal -radix hexadecimal sim:/accumulator_top_tb/UUT/proc2/B
+add wave -group "proc2" -noupdate -format literal -radix hexadecimal sim:/accumulator_top_tb/UUT/proc2/result
 add wave -group "proc2" -noupdate -format literal -radix ascii sim:/accumulator_top_tb/UUT/proc2/state_string
 
 add wave -group "proc3" -noupdate -format logic -radix binary sim:/accumulator_top_tb/UUT/proc3/req
 add wave -group "proc3" -noupdate -format logic -radix binary sim:/accumulator_top_tb/UUT/proc3/grant
+add wave -group "proc3" -noupdate -format literal -radix hexadecimal sim:/accumulator_top_tb/UUT/proc3/A
+add wave -group "proc3" -noupdate -format literal -radix hexadecimal sim:/accumulator_top_tb/UUT/proc3/B
+add wave -group "proc3" -noupdate -format literal -radix hexadecimal sim:/accumulator_top_tb/UUT/proc3/result
 add wave -group "proc3" -noupdate -format literal -radix ascii sim:/accumulator_top_tb/UUT/proc3/state_string
 
 TreeUpdate [SetDefaultTree]

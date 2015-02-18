@@ -20,7 +20,7 @@ reg [6:0] state;
 reg [1:0] op_internal;
 reg [31:0] A;
 reg [31:0] B;
-reg [31:0] write_internal;
+reg [31:0] result;
  
 localparam
 	NOP	  = 2'b00, // No operation
@@ -37,7 +37,7 @@ localparam
 	RSLT = 7'b1000000; // Result state    - sends the result over the bus
 	
 assign op = (op_internal == FETCH || op_internal == SEND) ? op_internal : 2'bz;
-assign write = (state == RSLT) ? write_internal : 32'bz;
+assign write = (state == RSLT) ? result : 32'bz;
 
 reg [4*8:1] state_string;
 
@@ -108,7 +108,7 @@ begin
 			
 			ADD:
 			begin
-				write_internal <= A + B;
+				result <= A + B;
 				state <= REQ3;
 			end
 			
