@@ -23,6 +23,7 @@ reg [31:0] B;
 reg [31:0] result;
 
 integer slowdown = 0;
+integer seed = 8882371;
  
 localparam
 	NOP	  = 2'b00, // No operation
@@ -107,7 +108,7 @@ begin
 					state <= ADD;
 					
 					// Set the slowdown here
-					slowdown <= 1000 + ({$random} % 9000);
+					slowdown <= 1000 + ({$random(seed)} % 9000);
 				end
 			end
 			

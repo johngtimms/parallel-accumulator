@@ -67,6 +67,7 @@ wire [31:0] result;
 reg [31:0] debug = 32'b0;
 
 integer load_count = 0;
+integer seed = 8882371;
 
 // accumulator_top (bus_clk, proc_clk, reset, load, result)
 accumulator_top UUT (bus_clk, proc_clk, reset_tb, load, result);
@@ -76,10 +77,10 @@ accumulator_top UUT (bus_clk, proc_clk, reset_tb, load, result);
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 initial
-begin		
+begin
 	while (load_count < 1023) begin
 		@(posedge bus_clk)
-		load <= {$random} % 65536;
+		load <= {$random(seed)} % 65536;
 		debug <= debug + load;
 		load_count <= load_count + 1;
 	end

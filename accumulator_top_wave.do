@@ -7,6 +7,7 @@ add wave -group "testbench" -noupdate -format logic -radix binary sim:/accumulat
 add wave -group "testbench" -noupdate -format literal -radix unsigned sim:/accumulator_top_tb/clk_count
 add wave -group "testbench" -noupdate -format literal -radix hexadecimal sim:/accumulator_top_tb/load
 add wave -group "testbench" -noupdate -format literal -radix hexadecimal sim:/accumulator_top_tb/result
+add wave -group "testbench" -noupdate -format literal -radix hexadecimal sim:/accumulator_top_tb/debug
 
 add wave -group "arbiter" -noupdate -format literal -radix binary sim:/accumulator_top_tb/UUT/arbiter/req
 add wave -group "arbiter" -noupdate -format literal -radix binary sim:/accumulator_top_tb/UUT/arbiter/grant
