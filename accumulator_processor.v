@@ -19,6 +19,8 @@ reg [1:0] op_internal;
 reg [31:0] A;
 reg [31:0] B;
 reg [31:0] result;
+
+integer slowdown = 0;
  
 localparam
 	NOP	  = 2'b00, // No operation
@@ -87,13 +89,22 @@ begin
 				if (op == END) begin
 					req_internal <= 1'b0;
 					state <= ADD;
+					
+					// Set the slowdown here
+					slowdown <= 1000 + ({$random} % 9000);
 				end
 			end
 			
 			ADD:
 			begin
 				result <= A + B;
-				state <= REQ3;
+				
+				if (slowdown != 0) begin
+					slowdown <= slowdown - 1;
+				end
+				else begin
+					state <= REQ3;
+				end
 			end
 			
 			REQ3:
