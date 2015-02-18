@@ -48,26 +48,23 @@ end
 localparam
 	NOP	  = 2'b00, // No operation
 	FETCH = 2'b01, // Fetch an operand from the memory
-	SEND  = 2'b10, // Send a result to the memory
-	END	  = 2'b11; // Memory has finished fetch/send
+	SEND  = 2'b10; // Send a result to the memory
 
-wire [1:0] op_tb;
-wire [31:0] data_tb;
+reg [1:0] op_tb;
+wire signal_tb;
+wire [31:0] read_tb;
+reg [31:0] write_tb;
 reg load_tb;
 wire full_tb;
 wire [9:0] index_tb;
+wire [31:0] preview_tb;
 wire [4:0] state_tb;
 reg [5*8:1] state_string;
 
-reg [1:0] op_internal = NOP;
-reg [31:0] data_internal;
-
+integer random_internal;
 integer results;
 integer load_count = 0;
 integer read_count = 0;
-
-assign op_tb = (op_internal == NOP) ? 2'bz : op_internal;
-assign data_tb = (load_count <= 1024) ? data_internal : 32'bz;
 
 always @(*)
 begin
@@ -81,7 +78,8 @@ begin
 	endcase
 end
 
-accumulator_memory UUT (clk_tb, reset_tb, op_tb, data_tb, load_tb, full_tb, index_tb, state_tb);
+// accumulator_memory (clk, reset, op, signal, read, write, load, full, index, preview, state)
+accumulator_memory UUT (clk_tb, reset_tb, op_tb, signal_tb, read_tb, write_tb, load_tb, full_tb, index_tb, preview_tb, state_tb);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Run the test
@@ -91,21 +89,30 @@ initial
 begin
 	results = $fopen("memory.txt", "w");
 	
+	wait (!reset_tb);
+	
 	while (load_count < 1023) begin
 		@(posedge clk_tb)
 		load_tb <= 1'b1;
-		data_internal <= {$random} % 65536;
-		$fdisplay (results, "Load %h, %d", data_internal, load_count);
+		random_internal = {$random} % 65536;
+		write_tb <= random_internal;
+		$fdisplay (results, "Load %h, %d", random_internal, load_count);
 		load_count <= load_count + 1;
 	end
 	
+	// Loading done, now fetch
 	@(posedge clk_tb)
+	write_tb <= 'bx;
 	load_tb <= 1'b0;
-	op_internal <= FETCH;
+	op_tb <= FETCH;
 	
-	while (read_count < 1023) begin
+	// Must be 1024 because it takes multiple clocks to get a read
+	while (read_count < 1024) begin
 		@(posedge clk_tb)
-		op_internal <= NOP;
+		if (signal_tb == 1) begin
+			$fdisplay (results, "Read %h, %d", read_tb, read_count);
+			read_count <= read_count + 1;
+		end
 	end
 	
 	$fclose (results);

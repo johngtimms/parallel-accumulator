@@ -6,15 +6,17 @@
  
 `timescale 1 ns / 100 ps
  
-module accumulator_processor (clk, reset, op, data, req, grant);
+module accumulator_processor (clk, reset, op, signal, read, write, req, grant, state);
  
-input clk, reset, grant;
-inout [1:0] op;
-inout [31:0] data;
+input clk, reset, signal, grant;
+input [1:0] op;
+input [31:0] read;
+output [31:0] write;
 output req;
+output [6:0] state;
 
-reg req_internal; 
-reg [4:0] state;
+reg req = 0; 
+reg [6:0] state;
 reg [1:0] op_internal;
 reg [31:0] A;
 reg [31:0] B;
@@ -25,8 +27,7 @@ integer slowdown = 0;
 localparam
 	NOP	  = 2'b00, // No operation
 	FETCH = 2'b01, // Fetch an operand from the memory
-	SEND  = 2'b10, // Send a result to the memory
-	END	  = 2'b11; // Memory has finished fetch/send
+	SEND  = 2'b10; // Send a result to the memory
  
 localparam 
 	REQ1 = 7'b0000001, // Request 1 state - requests the bus to receive A
@@ -37,9 +38,24 @@ localparam
 	REQ3 = 7'b0100000, // Request 3 state - requests the bus to send the result
 	RSLT = 7'b1000000; // Result state    - sends the result over the bus
 	
-assign req = req_internal;
 assign op = (op_internal == FETCH || op_internal == SEND) ? op_internal : 2'bz;
-assign data = (state == RSLT) ? result : 32'bz;
+assign write = (state == RSLT) ? result : 32'bz;
+
+reg [4*8:1] state_string;
+
+always @(*)
+begin
+	case (state)
+		7'b0000001: state_string = "REQ1";
+		7'b0000010: state_string = "RECA";
+		7'b0000100: state_string = "REQ2";
+		7'b0001000: state_string = "RECB";
+		7'b0010000: state_string = "ADD ";
+		7'b0100000: state_string = "REQ3";
+		7'b1000000: state_string = "RSLT";
+		default: state_string = "UNKN";
+	endcase
+end
 	
 always @(posedge clk, posedge reset) 
 begin
@@ -52,42 +68,42 @@ begin
 		
 			REQ1:
 			begin
-				req_internal <= 1'b1;
+				req <= 1'b1;
 				
-				if (grant) begin
-					op_internal <= FETCH;
+				if (grant && !signal) begin
 					state <= RECA;
 				end
 			end
 			
 			RECA:
 			begin
-				op_internal <= NOP;
-				A <= data;
+				op_internal <= FETCH;
+				A <= read;
 				
-				if (op == END) begin
-					req_internal <= 1'b0;
+				if (signal) begin
+					op_internal <= NOP;
+					req <= 1'b0;
 					state <= REQ2;
 				end
 			end
 			
 			REQ2:
 			begin
-				req_internal <= 1'b1;
+				req <= 1'b1;
 				
-				if (grant) begin
-					op_internal <= FETCH;
+				if (grant && !signal) begin
 					state <= RECB;
 				end
 			end
 			
 			RECB:
 			begin
-				op_internal <= NOP;
-				B <= data;
+				op_internal <= FETCH;
+				B <= read;
 				
-				if (op == END) begin
-					req_internal <= 1'b0;
+				if (signal) begin
+					op_internal <= NOP;
+					req <= 1'b0;
 					state <= ADD;
 					
 					// Set the slowdown here
@@ -109,20 +125,20 @@ begin
 			
 			REQ3:
 			begin
-				req_internal <= 1'b1;
+				req <= 1'b1;
 				
-				if (grant) begin
-					op_internal <= SEND;
+				if (grant && !signal) begin
 					state <= RSLT;
 				end
 			end
 			
 			RSLT:
 			begin
-				op_internal <= NOP;
+				op_internal <= SEND;	
 				
-				if (op == END) begin
-					req_internal <= 1'b0;
+				if (signal) begin
+					op_internal <= NOP;
+					req <= 1'b0;
 					state <= REQ1;
 				end
 			end
