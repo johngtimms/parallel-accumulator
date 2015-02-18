@@ -68,7 +68,7 @@ begin
 			begin
 				req <= 1'b1;
 				
-				if (grant) begin
+				if (grant && !signal) begin
 					state <= RECA;
 				end
 			end
@@ -89,7 +89,7 @@ begin
 			begin
 				req <= 1'b1;
 				
-				if (grant) begin
+				if (grant && !signal) begin
 					state <= RECB;
 				end
 			end
@@ -116,7 +116,7 @@ begin
 			begin
 				req <= 1'b1;
 				
-				if (grant) begin
+				if (grant && !signal) begin
 					state <= RSLT;
 				end
 			end

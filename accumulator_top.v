@@ -35,12 +35,10 @@ assign write = (load != 0) ? load : 'bz;
 assign read = (load != 0) ? load : 32'bz;
 assign result = (state == 5'b10000 && read !== 'bx) ? read : 'bx;
 
-//assign req = {1'b0,1'b0,1'b0,1'bz};
-
 // RoundRobinArbiter 			(clk, req, grant)
-RoundRobinArbiter 		arbiter	(bus_clk, req, grant);
+RoundRobinArbiter 		arbiter	(proc_clk, req, grant);
 // accumulator_memory 			(clk, reset, op, signal, read, write, load, full, index, preview, state)
-accumulator_memory		memory	(proc_clk, reset, op, signal, read, write, load_signal, full, index, preview, state);
+accumulator_memory		memory	(bus_clk, reset, op, signal, read, write, load_signal, full, index, preview, state);
 // accumulator_processor 		(clk, reset, op, signal, read, write, req, grant)
 accumulator_processor 	proc0 	(proc_clk, reset, op, signal, read, write, req[0], grant[0]);
 accumulator_processor 	proc1 	(proc_clk, reset, op, signal, read, write, req[1], grant[1]);

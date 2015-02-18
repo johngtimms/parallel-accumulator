@@ -1,7 +1,8 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
 
-add wave -group "testbench" -noupdate -format logic -radix binary sim:/accumulator_top_tb/clk_tb
+add wave -group "testbench" -noupdate -format logic -radix binary sim:/accumulator_top_tb/proc_clk
+add wave -group "testbench" -noupdate -format logic -radix binary sim:/accumulator_top_tb/bus_clk
 add wave -group "testbench" -noupdate -format logic -radix binary sim:/accumulator_top_tb/reset_tb
 add wave -group "testbench" -noupdate -format literal -radix unsigned sim:/accumulator_top_tb/clk_count
 add wave -group "testbench" -noupdate -format literal -radix hexadecimal sim:/accumulator_top_tb/load
